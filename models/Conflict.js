@@ -12,7 +12,19 @@ const conflictSchema = new mongoose.Schema(
       required: true,
       default: "low",
     },
+    /** Geographic reach of the conflict's impact: local / regional / global */
+    impact: {
+      type: String,
+      enum: ["local", "regional", "global"],
+      default: null,
+    },
     date: { type: String, required: true },
+    /** Primary image (kept for backward compatibility). */
+    imageLink: { type: String, default: "" },
+    /** All uploaded images for this conflict. */
+    imageLinks: { type: [String], default: [] },
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

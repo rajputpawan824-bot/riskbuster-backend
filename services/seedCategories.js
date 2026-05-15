@@ -7,6 +7,7 @@ const CATEGORY_SEED = [
     description:
       "Risks related to digital infrastructure, data breaches, ransomware, and state-sponsored cyber operations.",
     fileLink: "https://example.com/cyber-security-report.pdf",
+    fileLinks: ["https://example.com/cyber-security-report.pdf"],
   },
   {
     title: "Physical Threats",
@@ -14,18 +15,21 @@ const CATEGORY_SEED = [
     description:
       "Terrorism, civil unrest, workplace violence, and critical infrastructure physical attacks.",
     fileLink: "",
+    fileLinks: [],
   },
   {
     title: "Geopolitical Risks",
     creditTo: "Global Affairs Desk",
     description: "Sanctions, border disputes, and diplomatic tensions affecting business continuity.",
     fileLink: "",
+    fileLinks: [],
   },
   {
     title: "Financial Risks",
     creditTo: "Treasury & Compliance",
     description: "Market volatility, fraud, AML, and credit exposure in conflict-affected regions.",
     fileLink: "",
+    fileLinks: [],
   },
   {
     title: "Environmental Risks",
@@ -33,6 +37,7 @@ const CATEGORY_SEED = [
     description:
       "Natural disasters, resource scarcity, and environmental regulation under stress conditions.",
     fileLink: "",
+    fileLinks: [],
   },
 ];
 

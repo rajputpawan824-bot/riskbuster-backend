@@ -23,6 +23,21 @@ async function tryDeleteUploadedFile(fileLink) {
   }
 }
 
+function uploadedLinksFromReq(req) {
+  /** @type {Array<{path: string}>} */
+  const items = [];
+  if (req?.file?.path) items.push(req.file);
+  const rf = req?.files;
+  if (rf && typeof rf === "object") {
+    for (const v of Object.values(rf)) {
+      if (Array.isArray(v)) items.push(...v);
+    }
+  }
+  return items
+    .filter((f) => f && typeof f.path === "string")
+    .map((f) => `/uploads/${path.relative(uploadsDir, f.path).replaceAll("\\", "/")}`);
+}
+
 /** @param {import("mongoose").Document} doc */
 function serializeCategory(doc) {
   const row = doc.toObject ? doc.toObject() : doc;
@@ -43,6 +58,7 @@ function serializeCategory(doc) {
     creditTo: row.creditTo,
     description: row.description,
     fileLink: row.fileLink || "",
+    fileLinks: Array.isArray(row.fileLinks) ? row.fileLinks : row.fileLink ? [row.fileLink] : [],
     parentId,
     parentTitle,
   };
@@ -70,7 +86,7 @@ async function countChildren(categoryId) {
 
 export async function listCategories(_req, res) {
   try {
-    const docs = await Category.find()
+    const docs = await Category.find({ isDeleted: { $ne: true } })
       .populate("parent", "title")
       .sort({ parent: 1, title: 1 })
       .exec();
@@ -91,14 +107,15 @@ export async function createCategory(req, res) {
     return res.status(400).json({ error: resolved.error });
   }
   try {
-    const uploadedLink = req.file
-      ? `/uploads/${path.relative(uploadsDir, req.file.path).replaceAll("\\", "/")}`
-      : null;
+    const uploadedLinks = uploadedLinksFromReq(req);
+    const linksFromBody = fileLink != null && String(fileLink).trim() ? [String(fileLink).trim()] : [];
+    const mergedLinks = [...uploadedLinks, ...linksFromBody];
     const doc = await Category.create({
       title: String(title).trim(),
       creditTo: String(creditTo).trim(),
       description: String(description).trim(),
-      fileLink: uploadedLink ?? (fileLink != null ? String(fileLink).trim() : ""),
+      fileLink: mergedLinks[0] || "",
+      fileLinks: mergedLinks,
       parent: resolved.parent,
     });
     const populated = await Category.findById(doc._id).populate("parent", "title").exec();
@@ -146,15 +163,20 @@ export async function updateCategory(req, res) {
   doc.title = String(title).trim();
   doc.creditTo = String(creditTo).trim();
   doc.description = String(description).trim();
-  const uploadedLink = req.file
-    ? `/uploads/${path.relative(uploadsDir, req.file.path).replaceAll("\\", "/")}`
-    : null;
-  if (uploadedLink) {
-    const prev = doc.fileLink;
-    doc.fileLink = uploadedLink;
-    await tryDeleteUploadedFile(prev);
+  const uploadedLinks = uploadedLinksFromReq(req);
+
+  if (uploadedLinks.length > 0) {
+    // Append new uploads to existing list (don't delete previous uploads automatically).
+    const prevLinks = Array.isArray(doc.fileLinks) ? doc.fileLinks : doc.fileLink ? [doc.fileLink] : [];
+    doc.fileLinks = [...prevLinks, ...uploadedLinks];
+    doc.fileLink = doc.fileLinks[0] || "";
   } else {
-    doc.fileLink = fileLink != null ? String(fileLink).trim() : "";
+    // No new upload; keep existing uploaded links but allow editing the legacy `fileLink` field.
+    const legacy = fileLink != null ? String(fileLink).trim() : "";
+    doc.fileLink = legacy;
+    if (!Array.isArray(doc.fileLinks) || doc.fileLinks.length === 0) {
+      doc.fileLinks = legacy ? [legacy] : [];
+    }
   }
   doc.parent = resolved.parent;
   try {
@@ -181,8 +203,11 @@ export async function deleteCategory(req, res) {
   if (kids > 0) {
     return res.status(400).json({ error: "Cannot delete a category that has subcategories" });
   }
-  const result = await Category.findByIdAndDelete(id);
-  if (!result) return res.status(404).json({ error: "Not found" });
+  const doc = await Category.findById(id);
+  if (!doc) return res.status(404).json({ error: "Not found" });
+  doc.isDeleted = true;
+  doc.deletedAt = new Date();
+  await doc.save();
   res.status(204).end();
 }
 
