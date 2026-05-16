@@ -16,13 +16,13 @@ knowledgeArticlesRouter.get("/:id", getKnowledgeArticle);
 knowledgeArticlesRouter.post(
   "/",
   authRequired,
-  upload.fields([{ name: "images", maxCount: 10 }]),
+  upload.fields([{ name: "files", maxCount: 10 }]),
   createKnowledgeArticle
 );
 knowledgeArticlesRouter.put(
   "/:id",
   authRequired,
-  upload.fields([{ name: "images", maxCount: 10 }]),
+  upload.fields([{ name: "files", maxCount: 10 }]),
   updateKnowledgeArticle
 );
 knowledgeArticlesRouter.delete("/:id", authRequired, deleteKnowledgeArticle);

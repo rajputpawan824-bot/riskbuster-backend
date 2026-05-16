@@ -12,6 +12,10 @@ const knowledgeArticleSchema = new mongoose.Schema(
     imageLink: { type: String, default: "" },
     /** All uploaded images for this article. */
     imageLinks: { type: [String], default: [] },
+    /** Primary file path for backward compatibility. */
+    fileLink: { type: String, default: "" },
+    /** All uploaded files for this article. */
+    fileLinks: { type: [String], default: [] },
     isDeleted: { type: Boolean, default: false, index: true },
     deletedAt: { type: Date, default: null },
   },

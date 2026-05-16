@@ -21,7 +21,15 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "uploads"), {
+    setHeaders(res, filePath) {
+      const filename = path.basename(filePath);
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    },
+  })
+);
 
 app.use("/api/auth", authRouter);
 app.use("/api/conflicts", conflictsRouter);
