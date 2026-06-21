@@ -11,9 +11,7 @@ import { countriesRouter } from "./routes/countriesRoutes.js";
 import { healthRouter } from "./routes/healthRoutes.js";
 import { knowledgeArticlesRouter } from "./routes/knowledgeArticlesRoutes.js";
 import { templatesRouter } from "./routes/templatesRoutes.js";
-import { seedCategoriesIfEmpty } from "./services/seedCategories.js";
 
-import { backfillCountryRegions, seedCountriesIfEmpty } from "./services/seedCountries.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -46,10 +44,7 @@ async function start() {
   }
   await mongoose.connect(MONGODB_URI);
   console.log("Connected to MongoDB");
-  await seedCategoriesIfEmpty();
 
-  await seedCountriesIfEmpty();
-  await backfillCountryRegions();
   app.listen(PORT, () => {
     console.log(`API listening on http://localhost:${PORT}`);
   });
