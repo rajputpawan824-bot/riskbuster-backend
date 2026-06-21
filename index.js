@@ -12,7 +12,7 @@ import { healthRouter } from "./routes/healthRoutes.js";
 import { knowledgeArticlesRouter } from "./routes/knowledgeArticlesRoutes.js";
 import { templatesRouter } from "./routes/templatesRoutes.js";
 import { seedCategoriesIfEmpty } from "./services/seedCategories.js";
-import { seedConflictsIfEmpty } from "./services/seedConflicts.js";
+
 import { backfillCountryRegions, seedCountriesIfEmpty } from "./services/seedCountries.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -47,7 +47,7 @@ async function start() {
   await mongoose.connect(MONGODB_URI);
   console.log("Connected to MongoDB");
   await seedCategoriesIfEmpty();
-  await seedConflictsIfEmpty();
+
   await seedCountriesIfEmpty();
   await backfillCountryRegions();
   app.listen(PORT, () => {
