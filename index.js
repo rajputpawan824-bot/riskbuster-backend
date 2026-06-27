@@ -11,6 +11,7 @@ import { countriesRouter } from "./routes/countriesRoutes.js";
 import { healthRouter } from "./routes/healthRoutes.js";
 import { knowledgeArticlesRouter } from "./routes/knowledgeArticlesRoutes.js";
 import { templatesRouter } from "./routes/templatesRoutes.js";
+import { contactRouter } from "./routes/contactRoutes.js";
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -36,6 +37,7 @@ app.use("/api/countries", countriesRouter);
 app.use("/api/knowledge-articles", knowledgeArticlesRouter);
 app.use("/api/templates", templatesRouter);
 app.use("/api/health", healthRouter);
+app.use("/api/contact", contactRouter);
 
 async function start() {
   if (!MONGODB_URI) {
