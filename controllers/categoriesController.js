@@ -54,9 +54,12 @@ function serializeCategory(doc) {
   }
   return {
     id: String(row._id),
-    title: row.title,
-    creditTo: row.creditTo,
-    description: row.description,
+    // Defensive: always return a string — documents imported from external
+    // systems may not have these fields set. The UI relies on title being
+    // a string (not undefined which gets stripped from JSON).
+    title: typeof row.title === "string" ? row.title : "",
+    creditTo: typeof row.creditTo === "string" ? row.creditTo : "",
+    description: row.description || "",
     fileLink: row.fileLink || "",
     fileLinks: Array.isArray(row.fileLinks) ? row.fileLinks : row.fileLink ? [row.fileLink] : [],
     parentId,
