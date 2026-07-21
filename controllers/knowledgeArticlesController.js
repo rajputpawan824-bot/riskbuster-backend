@@ -122,10 +122,19 @@ function serializeArticle(doc) {
 export async function listKnowledgeArticles(req, res) {
   try {
     const country = req.query.country;
+    const search = typeof req.query?.search === "string" ? req.query.search.trim() : "";
     const query = { isDeleted: { $ne: true } };
     if (country && country !== "all" && String(country).toLowerCase() !== "all countries") {
       const c = String(country).trim();
       if (c) query.country = { $regex: c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), $options: "i" };
+    }
+    if (search) {
+      const s = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      query.$or = [
+        { title: { $regex: s, $options: "i" } },
+        { country: { $regex: s, $options: "i" } },
+        { description: { $regex: s, $options: "i" } },
+      ];
     }
     const docs = await KnowledgeArticle.find(query)
       .sort({ postedDate: -1, createdAt: -1 })

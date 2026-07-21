@@ -87,12 +87,52 @@ async function countChildren(categoryId) {
   return Category.countDocuments({ parent: categoryId });
 }
 
-export async function listCategories(_req, res) {
+function escapeRegex(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export async function listCategories(req, res) {
   try {
-    const docs = await Category.find({ isDeleted: { $ne: true } })
+    const search = typeof req.query?.search === "string" ? req.query.search.trim() : "";
+    const baseQuery = { isDeleted: { $ne: true } };
+
+    let docs = await Category.find(baseQuery)
       .populate("parent", "title")
       .sort({ parent: 1, title: 1 })
       .exec();
+
+    if (search) {
+      const rx = new RegExp(escapeRegex(search), "i");
+      const matched = await Category.find({
+        ...baseQuery,
+        $or: [{ title: rx }, { creditTo: rx }, { description: rx }],
+      })
+        .populate("parent", "title")
+        .sort({ parent: 1, title: 1 })
+        .exec();
+
+      const parentIds = [...new Set(matched.map((doc) => String(doc.parent?._id || doc.parent || "")))]
+        .filter(Boolean);
+
+      if (parentIds.length > 0) {
+        const parents = await Category.find({
+          ...baseQuery,
+          _id: { $in: parentIds },
+        })
+          .populate("parent", "title")
+          .sort({ parent: 1, title: 1 })
+          .exec();
+
+        const merged = new Map();
+        for (const doc of [...parents, ...matched]) {
+          merged.set(String(doc._id), doc);
+        }
+        docs = [...merged.values()];
+      } else {
+        docs = matched;
+      }
+    }
+
     res.json(docs.map((d) => serializeCategory(d)));
   } catch (e) {
     console.error(e);
@@ -213,4 +253,3 @@ export async function deleteCategory(req, res) {
   await doc.save();
   res.status(204).end();
 }
-

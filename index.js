@@ -9,6 +9,7 @@ import { categoriesRouter } from "./routes/categoriesRoutes.js";
 import { conflictsRouter } from "./routes/conflictsRoutes.js";
 import { countriesRouter } from "./routes/countriesRoutes.js";
 import { healthRouter } from "./routes/healthRoutes.js";
+import { downloadsRouter } from "./routes/downloadsRoutes.js";
 import { knowledgeArticlesRouter } from "./routes/knowledgeArticlesRoutes.js";
 import { templatesRouter } from "./routes/templatesRoutes.js";
 import { contactRouter } from "./routes/contactRoutes.js";
@@ -22,18 +23,23 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(
   "/uploads",
-  express.static(path.join(__dirname, "uploads"), {
-    setHeaders(res, filePath) {
-      const filename = path.basename(filePath);
+  (req, res, next) => {
+    const filename = path.basename(req.path);
+    if (req.query?.download === "1") {
       res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-    },
-  })
+    } else {
+      res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+    }
+    next();
+  },
+  express.static(path.join(__dirname, "uploads"))
 );
 
 app.use("/api/auth", authRouter);
 app.use("/api/conflicts", conflictsRouter);
 app.use("/api/categories", categoriesRouter);
 app.use("/api/countries", countriesRouter);
+app.use("/api/downloads", downloadsRouter);
 app.use("/api/knowledge-articles", knowledgeArticlesRouter);
 app.use("/api/templates", templatesRouter);
 app.use("/api/health", healthRouter);

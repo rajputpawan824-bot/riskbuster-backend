@@ -9,10 +9,12 @@ export function authRequired(req, res, next) {
   }
   try {
     const payload = jwt.verify(token, JWT_SECRET);
-    req.user = { email: payload.sub };
+    req.user = {
+      email: payload.sub,
+      role: payload.role || "user",
+    };
     next();
   } catch {
     return res.status(401).json({ error: "Invalid or expired token" });
   }
 }
-
