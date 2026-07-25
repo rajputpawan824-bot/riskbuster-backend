@@ -7,6 +7,10 @@ export async function recordDownload(req, res) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
+    if (req.user?.role === "admin") {
+      return res.status(201).json({ ok: true, downloads: 0, admin: true });
+    }
+
     const { documentType, documentId, title, fileLink } = req.body || {};
     if (!documentType || !fileLink) {
       return res.status(400).json({ error: "documentType and fileLink are required" });
