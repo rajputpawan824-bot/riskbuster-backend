@@ -18,6 +18,8 @@ const userSchema = new mongoose.Schema(
     passwordHash: { type: String, required: true },
     country: { type: String, trim: true, default: "" },
     download_document: { type: [downloadDocumentSchema], default: [] },
+    resetPasswordToken: { type: String, default: null },
+    resetPasswordExpires: { type: Date, default: null },
   },
   { timestamps: true }
 );

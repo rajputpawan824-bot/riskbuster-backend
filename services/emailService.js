@@ -164,3 +164,109 @@ export default async function sendContactEmail({
     };
   }
 }
+
+export async function sendPasswordResetEmail({ email, name, resetLink }) {
+  try {
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT),
+      secure: process.env.SMTP_PORT == 465,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    });
+
+    const year = new Date().getFullYear();
+    const recipientName = name ? String(name).trim() : "Valued User";
+
+    const headerTdStyle = logoExists
+      ? "background:#08264d;padding:0;text-align:center;"
+      : "background:#08264d;padding:30px;text-align:center;";
+
+    const headerContent = logoExists
+      ? '<img src="cid:riskbusters_logo" alt="RiskBusters" style="width:100%;max-width:650px;height:auto;display:block;margin:0 auto;" />'
+      : '<h1 style="margin:0;color:#fff;font-size:32px;">RiskBusters</h1>' +
+        '<p style="margin-top:10px;color:#d6e7ff;font-size:14px;">Analyzing Threats, Identifying Risks and Mitigation</p>';
+
+    const html =
+      "<!DOCTYPE html>" +
+      '<html lang="en">' +
+      "<head>" +
+      '<meta charset="UTF-8">' +
+      "<title>RiskBusters Password Reset</title>" +
+      "</head>" +
+      '<body style="margin:0;padding:40px 0;background:#f3f6fb;font-family:Arial,Helvetica,sans-serif;">' +
+      '<table width="100%" cellpadding="0" cellspacing="0">' +
+      "<tr>" +
+      '<td align="center">' +
+      '<table width="650" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.08);">' +
+
+      // Header
+      "<tr>" +
+      '<td style="' + headerTdStyle + '">' +
+      headerContent +
+      "</td>" +
+      "</tr>" +
+
+      // Body Content
+      "<tr>" +
+      '<td style="padding:40px 40px 20px;">' +
+      '<h2 style="margin:0 0 15px;color:#08264d;font-size:24px;">🔑 Reset Your Password</h2>' +
+      '<p style="color:#4a5568;font-size:16px;line-height:26px;margin:0 0 15px;">Hello ' + recipientName + ',</p>' +
+      '<p style="color:#4a5568;font-size:15px;line-height:25px;margin:0 0 25px;">We received a request to reset your password for your RiskBusters account. Click the button below to choose a new password:</p>' +
+
+      // CTA Button
+      '<table width="100%" cellpadding="0" cellspacing="0" style="margin:25px 0 35px;">' +
+      "<tr>" +
+      '<td align="center">' +
+      '<a href="' + resetLink + '" target="_blank" style="display:inline-block;padding:16px 36px;background:#0d6efd;color:#ffffff;text-decoration:none;font-weight:bold;font-size:16px;border-radius:8px;box-shadow:0 4px 12px rgba(13,110,253,0.35);">Reset Password</a>' +
+      "</td>" +
+      "</tr>" +
+      "</table>" +
+
+      '<div style="padding:15px;background:#fff5f5;border-left:4px solid #e53e3e;border-radius:4px;margin-bottom:25px;">' +
+      '<p style="margin:0;color:#c53030;font-size:13px;line-height:20px;"><strong>Security Notice:</strong> This password reset link will expire in <strong>1 hour</strong>. If you did not request a password reset, you can safely ignore this email.</p>' +
+      "</div>" +
+      "</td>" +
+      "</tr>" +
+
+      // Footer
+      "<tr>" +
+      '<td style="padding:25px;background:#08264d;text-align:center;">' +
+      '<p style="margin:0;color:#ffffff;font-size:14px;">© ' + year + " RiskBusters</p>" +
+      '<p style="margin-top:8px;color:#bcd0eb;font-size:13px;">Security Threat &amp; Risk Management Platform</p>' +
+      "</td>" +
+      "</tr>" +
+
+      "</table>" +
+      "</td>" +
+      "</tr>" +
+      "</table>" +
+      "</body>" +
+      "</html>";
+
+    const attachments = [];
+    if (logoExists) {
+      attachments.push({
+        filename: "logo.png",
+        path: logoPath,
+        cid: "riskbusters_logo",
+      });
+    }
+
+    const info = await transporter.sendMail({
+      from: '"RiskBusters Security" <' + process.env.SMTP_USER + ">",
+      to: email,
+      subject: "Password Reset Request - RiskBusters",
+      html,
+      attachments,
+    });
+
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error("Failed to send password reset email:", error);
+    return { success: false, message: error.message };
+  }
+}
+

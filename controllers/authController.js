@@ -1,7 +1,8 @@
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { User } from "../models/User.js";
-import { ADMIN_EMAIL, ADMIN_PASSWORD, JWT_SECRET } from "../config/env.js";
+import { ADMIN_EMAIL, ADMIN_PASSWORD, JWT_SECRET, FRONTEND_URL } from "../config/env.js";
+import { sendPasswordResetEmail } from "../services/emailService.js";
 
 function issueToken(email, role) {
   return jwt.sign({ sub: email, role }, JWT_SECRET, { expiresIn: "7d" });
@@ -112,3 +113,99 @@ export async function listUsers(req, res) {
     res.status(500).json({ error: "Failed to list users" });
   }
 }
+
+export async function forgotPassword(req, res) {
+  try {
+    const { email } = req.body || {};
+    if (!email || !String(email).trim()) {
+      return res.status(400).json({ error: "Email is required" });
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+
+    if (normalizedEmail === String(ADMIN_EMAIL).toLowerCase()) {
+      return res.json({
+        message:
+          "Admin password is managed via system configuration. Please contact system administration if you need to reset admin access.",
+      });
+    }
+
+    const user = await User.findOne({ email: normalizedEmail }).exec();
+    if (!user) {
+      return res.json({
+        message:
+          "If an account with that email exists, we have sent password reset instructions.",
+      });
+    }
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = expires;
+    await user.save();
+
+    const resetLink = `${FRONTEND_URL}/reset-password?token=${token}&email=${encodeURIComponent(
+      user.email
+    )}`;
+
+    const result = await sendPasswordResetEmail({
+      email: user.email,
+      name: user.name,
+      resetLink,
+    });
+
+    if (!result.success) {
+      console.error("Failed to send reset email:", result.message);
+    }
+
+    return res.json({
+      message:
+        "If an account with that email exists, we have sent password reset instructions.",
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Failed to process password reset request" });
+  }
+}
+
+export async function resetPassword(req, res) {
+  try {
+    const { email, token, newPassword } = req.body || {};
+    if (!email || !token || !newPassword) {
+      return res
+        .status(400)
+        .json({ error: "Email, reset token, and new password are required" });
+    }
+
+    if (String(newPassword).length < 6) {
+      return res
+        .status(400)
+        .json({ error: "New password must be at least 6 characters long" });
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const user = await User.findOne({
+      email: normalizedEmail,
+      resetPasswordToken: String(token).trim(),
+      resetPasswordExpires: { $gt: new Date() },
+    }).exec();
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ error: "Password reset token is invalid or has expired." });
+    }
+
+    user.passwordHash = hashPassword(newPassword);
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+    await user.save();
+
+    return res.json({ message: "Password reset successful! You can now log in." });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Failed to reset password" });
+  }
+}
+

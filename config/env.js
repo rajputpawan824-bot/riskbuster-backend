@@ -24,3 +24,5 @@ export const MONGODB_URI =
     ? "mongodb://localhost:27017/riskBuster"
     : "mongodb+srv://indiaProject:LEsbp5k9osyQcp6Q@indiaproject.1go0lry.mongodb.net/");
 export const CONTACT_RECEIVER_EMAIL = process.env.CONTACT_RECEIVER_EMAIL || "pawanrajput852710@gmail.com";
+export const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+
