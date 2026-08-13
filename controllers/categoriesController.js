@@ -141,6 +141,9 @@ export async function listCategories(req, res) {
 }
 
 export async function createCategory(req, res) {
+  if (req.user?.role !== "admin") {
+    return res.status(403).json({ error: "Access denied. Admins only." });
+  }
   const { title, creditTo, description, fileLink, parentId } = req.body || {};
   if (!title || !creditTo || !description) {
     return res.status(400).json({ error: "Title, credit, and description are required" });
@@ -175,6 +178,9 @@ export async function createCategory(req, res) {
 }
 
 export async function updateCategory(req, res) {
+  if (req.user?.role !== "admin") {
+    return res.status(403).json({ error: "Access denied. Admins only." });
+  }
   const { id } = req.params;
   const { title, creditTo, description, fileLink, parentId } = req.body || {};
   if (!mongoose.isValidObjectId(id)) {
@@ -238,6 +244,9 @@ export async function updateCategory(req, res) {
 }
 
 export async function deleteCategory(req, res) {
+  if (req.user?.role !== "admin") {
+    return res.status(403).json({ error: "Access denied. Admins only." });
+  }
   const { id } = req.params;
   if (!mongoose.isValidObjectId(id)) {
     return res.status(400).json({ error: "Invalid category id" });

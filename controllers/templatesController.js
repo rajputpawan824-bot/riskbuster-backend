@@ -49,6 +49,9 @@ export async function listTemplates(_req, res) {
 
 export async function createTemplate(req, res) {
   try {
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({ error: "Access denied. Admins only." });
+    }
     const { title, description, fileLink } = req.body || {};
     if (!title || !description) {
       return res.status(400).json({ error: "Title and description are required" });
@@ -76,6 +79,9 @@ export async function createTemplate(req, res) {
 
 export async function updateTemplate(req, res) {
   try {
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({ error: "Access denied. Admins only." });
+    }
     const { id } = req.params;
     const { title, description, fileLink } = req.body || {};
     if (!mongoose.isValidObjectId(id)) {
@@ -116,6 +122,9 @@ export async function updateTemplate(req, res) {
 
 export async function deleteTemplate(req, res) {
   try {
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({ error: "Access denied. Admins only." });
+    }
     const { id } = req.params;
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({ error: "Invalid template id" });

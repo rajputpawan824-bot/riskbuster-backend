@@ -25,6 +25,9 @@ export async function listCountries(_req, res) {
 
 export async function createCountry(req, res) {
   try {
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({ error: "Access denied. Admins only." });
+    }
     const { label, flag, region } = req.body || {};
     if (!label || !String(label).trim()) {
       return res.status(400).json({ error: "Country name is required" });
@@ -46,6 +49,9 @@ export async function createCountry(req, res) {
 
 export async function updateCountry(req, res) {
   try {
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({ error: "Access denied. Admins only." });
+    }
     const { id } = req.params;
     const { label, flag, region } = req.body || {};
     if (!mongoose.isValidObjectId(id)) {
@@ -73,6 +79,9 @@ export async function updateCountry(req, res) {
 
 export async function deleteCountry(req, res) {
   try {
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({ error: "Access denied. Admins only." });
+    }
     const { id } = req.params;
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({ error: "Invalid country id" });

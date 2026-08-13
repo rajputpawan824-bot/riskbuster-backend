@@ -81,6 +81,9 @@ export async function getConflict(req, res) {
 
 export async function createConflict(req, res) {
   try {
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({ error: "Access denied. Admins only." });
+    }
     const { title, description, country, status, date, conflictType, impact } = req.body || {};
     if (!title || !description || !country || !status || !date || !conflictType) {
       return res.status(400).json({ error: "All fields are required" });
@@ -121,6 +124,9 @@ export async function createConflict(req, res) {
 
 export async function updateConflict(req, res) {
   try {
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({ error: "Access denied. Admins only." });
+    }
     const { id } = req.params;
     const { title, description, country, status, date, conflictType, impact } = req.body || {};
 
@@ -176,6 +182,9 @@ export async function updateConflict(req, res) {
 
 export async function deleteConflict(req, res) {
   try {
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({ error: "Access denied. Admins only." });
+    }
     const { id } = req.params;
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({ error: "Invalid conflict id" });

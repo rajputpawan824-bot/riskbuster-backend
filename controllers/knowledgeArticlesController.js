@@ -163,6 +163,9 @@ export async function getKnowledgeArticle(req, res) {
 
 export async function createKnowledgeArticle(req, res) {
   try {
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({ error: "Access denied. Admins only." });
+    }
     const { title, description, country, postedDate } = req.body || {};
     if (!title || !description || !postedDate) {
       return res.status(400).json({ error: "Title, posted date and description are required." });
@@ -195,6 +198,9 @@ export async function createKnowledgeArticle(req, res) {
 
 export async function updateKnowledgeArticle(req, res) {
   try {
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({ error: "Access denied. Admins only." });
+    }
     const { id } = req.params;
     const { title, description, country, postedDate, removeFiles } = req.body || {};
     if (!mongoose.isValidObjectId(id)) {
@@ -251,6 +257,9 @@ export async function updateKnowledgeArticle(req, res) {
 
 export async function deleteKnowledgeArticle(req, res) {
   try {
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({ error: "Access denied. Admins only." });
+    }
     const { id } = req.params;
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({ error: "Invalid article id" });
